@@ -1,7 +1,469 @@
-{% extends 'base.html' %}{% block title %}TraceGuard — Audit{% endblock %}{% block content %}
-<main class="wrap"><section class="hero"><div><p class="eyebrow">DIGITAL FOOTPRINT CHECK</p><h1>How safe is your<br><span>online footprint?</span></h1><p class="lead">Answer 10 quick questions about your online habits. TraceGuard will calculate your risk level and give you simple safety recommendations.</p><div class="privacy">🛡️ <b>Privacy first.</b> This audit is designed for student awareness and stores only the information you submit.</div></div><div class="hero-card"><div class="shield">✓</div><b>10 questions</b><span>About 2 minutes</span><hr><div><strong>0–2</strong> Low risk</div><div><strong>3–5</strong> Medium risk</div><div><strong>6–10</strong> High risk</div></div></section>
-{% if not result %}<form method="post" class="audit-form"><input type="hidden" name="action" value="audit"><section class="panel intro"><p class="eyebrow">YOUR AUDIT</p><h2>Check your digital habits</h2><p>Choose Yes or No for every question. Answer honestly — this is about awareness, not judgment.</p><label class="name-label">Your name <span>(Optional)</span><input name="student_name" placeholder="Enter your name"></label><label class="name-label location-label">Location <span>(Optional)</span><input name="location" maxlength="300" placeholder="Enter your city, school, or area..."></label></section>
-<div class="questions">{% for q in questions %}<section class="question"><div class="qnum">{{'%02d'|format(loop.index)}}</div><div class="qbody"><h3>{{q}}</h3><div class="choices"><label><input required type="radio" name="q{{loop.index}}" value="yes"><span>Yes</span></label><label><input required type="radio" name="q{{loop.index}}" value="no"><span>No</span></label></div></div></section>{% endfor %}</div><button class="primary big" type="submit">Check my footprint →</button></form>{% else %}
-<section class="result"><div class="result-head"><div><p class="eyebrow cyan">YOUR AUDIT SCORE</p><div class="score">{{result.score}}<small>/ 10 risky answers</small></div></div><span class="risk {{result.risk_level|lower}}">{{result.risk_level}} risk</span></div><div class="result-body"><h2>{{'Great job! Your online habits are generally safe.' if result.risk_level=='Low' else ('Your digital footprint has some areas that could be improved.' if result.risk_level=='Medium' else 'Your digital footprint may expose you to several online risks.')}}</h2><p>Follow the recommendations below to improve and maintain your online safety.</p><div class="recommend"><h3>Recommended next steps</h3>{% for r in result.recommendations %}<div class="rec"><span>✓</span>{{r}}</div>{% endfor %}</div><a class="secondary" href="{{url_for('audit')}}">↻ Take audit again</a>
-<form method="post" class="feedback"><input type="hidden" name="action" value="feedback"><input type="hidden" name="audit_id" value="{{result.id}}"><p class="eyebrow">QUICK SURVEY</p><h3>How was your experience?</h3><p>Your feedback helps us improve this student safety tool.</p><b>How would you rate this audit?</b><div class="rating">{% for n in range(1,6) %}<label><input required type="radio" name="rating" value="{{n}}"><span>★ {{n}}</span></label>{% endfor %}</div><b>How did the website feel to use?</b><div class="experiences">{% for x in ['Excellent','Very good','Good','Okay','Needs improvement'] %}<label><input required type="radio" name="experience" value="{{x}}"><span>{{x}}</span></label>{% endfor %}</div><textarea name="comment" maxlength="1000" placeholder="Tell us what you liked or what could be better..."></textarea><button class="primary" type="submit">Send feedback →</button></form></div></section>{% endif %}
-<section class="tips"><p class="eyebrow">SAFETY GUIDE</p><h2>Simple habits. Safer digital life.</h2><p class="lead">Small changes to your everyday online behavior can make a big difference.</p><div class="tip-grid">{% for icon,title,text in tips %}<article><span class="tip-icon">{{icon}}</span><h3>{{title}}</h3><p>{{text}}</p></article>{% endfor %}</div></section></main>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}TraceGuard — Audit{% endblock %}
+
+{% block content %}
+
+<main class="wrap">
+
+<section class="hero">
+    <div>
+        <p class="eyebrow">DIGITAL FOOTPRINT CHECK</p>
+
+        <h1>
+            How safe is your<br>
+            <span>online footprint?</span>
+        </h1>
+
+        <p class="lead">
+            Answer 10 quick questions about your online habits.
+            TraceGuard will calculate your risk level and give you
+            simple safety recommendations.
+        </p>
+
+        <div class="privacy">
+            🛡️ <b>Privacy first.</b>
+            This audit is designed for student awareness and stores
+            only the information you submit.
+        </div>
+    </div>
+
+    <div class="hero-card">
+        <div class="shield">✓</div>
+
+        <b>10 questions</b>
+        <span>About 2 minutes</span>
+
+        <hr>
+
+        <div><strong>0–2</strong> Low risk</div>
+        <div><strong>3–5</strong> Medium risk</div>
+        <div><strong>6–10</strong> High risk</div>
+    </div>
+</section>
+
+
+{% if not result %}
+
+<form method="post" class="audit-form" novalidate>
+
+    <input type="hidden" name="action" value="audit">
+
+    <section class="panel intro">
+
+        <p class="eyebrow">YOUR AUDIT</p>
+
+        <h2>Check your digital habits</h2>
+
+        <p>
+            Choose Yes or No for every question.
+            Answer honestly — this is about awareness, not judgment.
+        </p>
+
+        <label class="name-label">
+            Your name <span>(Optional)</span>
+
+            <input
+                name="student_name"
+                placeholder="Enter your name">
+        </label>
+
+        <label class="name-label location-label">
+            Location <span>(Optional)</span>
+
+            <input
+                name="location"
+                maxlength="300"
+                placeholder="Enter your city, school, or area...">
+        </label>
+
+    </section>
+
+
+    <div class="questions">
+
+        {% for q in questions %}
+
+        <section class="question">
+
+            <div class="qnum">
+                {{'%02d'|format(loop.index)}}
+            </div>
+
+            <div class="qbody">
+
+                <h3>{{q}}</h3>
+
+                <div class="choices">
+
+                    <label>
+                        <input
+                            required
+                            type="radio"
+                            name="q{{loop.index}}"
+                            value="yes">
+
+                        <span>Yes</span>
+                    </label>
+
+                    <label>
+                        <input
+                            required
+                            type="radio"
+                            name="q{{loop.index}}"
+                            value="no">
+
+                        <span>No</span>
+                    </label>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        {% endfor %}
+
+    </div>
+
+
+    <button class="primary big" type="submit">
+        Check my footprint →
+    </button>
+
+</form>
+
+
+{% else %}
+
+
+<section class="result">
+
+    <div class="result-head">
+
+        <div>
+
+            <p class="eyebrow cyan">
+                YOUR AUDIT SCORE
+            </p>
+
+            <div class="score">
+
+                {{result.score}}
+
+                <small>
+                    / 10 risky answers
+                </small>
+
+            </div>
+
+        </div>
+
+        <span class="risk {{result.risk_level|lower}}">
+            {{result.risk_level}} risk
+        </span>
+
+    </div>
+
+
+    <div class="result-body">
+
+        <h2>
+            {{'Great job! Your online habits are generally safe.'
+            if result.risk_level=='Low'
+            else
+            ('Your digital footprint has some areas that could be improved.'
+            if result.risk_level=='Medium'
+            else
+            'Your digital footprint may expose you to several online risks.')}}
+        </h2>
+
+        <p>
+            Follow the recommendations below to improve
+            and maintain your online safety.
+        </p>
+
+
+        <div class="recommend">
+
+            <h3>Recommended next steps</h3>
+
+            {% for r in result.recommendations %}
+
+            <div class="rec">
+                <span>✓</span>
+                {{r}}
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <a class="secondary" href="{{url_for('audit')}}">
+            ↻ Take audit again
+        </a>
+
+
+        <form method="post" class="feedback">
+
+            <input
+                type="hidden"
+                name="action"
+                value="feedback">
+
+            <input
+                type="hidden"
+                name="audit_id"
+                value="{{result.id}}">
+
+
+            <p class="eyebrow">
+                QUICK SURVEY
+            </p>
+
+            <h3>
+                How was your experience?
+            </h3>
+
+            <p>
+                Your feedback helps us improve
+                this student safety tool.
+            </p>
+
+
+            <b>
+                How would you rate this audit?
+            </b>
+
+
+            <div class="rating">
+
+                {% for n in range(1,6) %}
+
+                <label>
+
+                    <input
+                        required
+                        type="radio"
+                        name="rating"
+                        value="{{n}}">
+
+                    <span>
+                        ★ {{n}}
+                    </span>
+
+                </label>
+
+                {% endfor %}
+
+            </div>
+
+
+            <b>
+                How did the website feel to use?
+            </b>
+
+
+            <div class="experiences">
+
+                {% for x in
+                ['Excellent',
+                'Very good',
+                'Good',
+                'Okay',
+                'Needs improvement'] %}
+
+                <label>
+
+                    <input
+                        required
+                        type="radio"
+                        name="experience"
+                        value="{{x}}">
+
+                    <span>
+                        {{x}}
+                    </span>
+
+                </label>
+
+                {% endfor %}
+
+            </div>
+
+
+            <textarea
+                name="comment"
+                maxlength="1000"
+                placeholder="Tell us what you liked or what could be better...">
+            </textarea>
+
+
+            <button
+                class="primary"
+                type="submit">
+
+                Send feedback →
+
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
+
+{% endif %}
+
+
+<section class="tips">
+
+    <p class="eyebrow">
+        SAFETY GUIDE
+    </p>
+
+    <h2>
+        Simple habits. Safer digital life.
+    </h2>
+
+    <p class="lead">
+        Small changes to your everyday online behavior
+        can make a big difference.
+    </p>
+
+
+    <div class="tip-grid">
+
+        {% for icon,title,text in tips %}
+
+        <article>
+
+            <span class="tip-icon">
+                {{icon}}
+            </span>
+
+            <h3>
+                {{title}}
+            </h3>
+
+            <p>
+                {{text}}
+            </p>
+
+        </article>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+</main>
+
+
+<!-- QUESTION VALIDATION -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const form = document.querySelector(".audit-form");
+
+    if (!form) return;
+
+
+    form.addEventListener("submit", function (e) {
+
+        const questions =
+            document.querySelectorAll(".question");
+
+        let firstMissing = null;
+
+        let allAnswered = true;
+
+
+        questions.forEach(function (question, index) {
+
+            const answer =
+                question.querySelector(
+                    'input[name="q' +
+                    (index + 1) +
+                    '"]:checked'
+                );
+
+
+            question.style.border = "";
+
+
+            if (!answer) {
+
+                allAnswered = false;
+
+                question.style.border =
+                    "2px solid #ef4444";
+
+
+                if (!firstMissing) {
+
+                    firstMissing = question;
+
+                }
+
+            }
+
+        });
+
+
+        if (!allAnswered) {
+
+            e.preventDefault();
+
+
+            alert(
+                "⚠️ Please answer all 10 questions before checking your footprint."
+            );
+
+
+            firstMissing.scrollIntoView({
+
+                behavior: "smooth",
+
+                block: "center"
+
+            });
+
+        }
+
+    });
+
+
+    document
+        .querySelectorAll(
+            '.question input[type="radio"]'
+        )
+        .forEach(function (input) {
+
+            input.addEventListener(
+                "change",
+                function () {
+
+                    const question =
+                        this.closest(".question");
+
+                    if (question) {
+
+                        question.style.border = "";
+
+                    }
+
+                }
+            );
+
+        });
+
+});
+
+</script>
+
+{% endblock %}
