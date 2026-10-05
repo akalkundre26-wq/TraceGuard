@@ -1,0 +1,40 @@
+{% extends 'base.html' %}{% block title %}TraceGuard — Records{% endblock %}{% block content %}<main class="wrap records"><a class="back" href="{{url_for('audit')}}">← Back to audit</a><div class="records-title"><div><p class="eyebrow">SAVED RESULTS</p><h1>Audit records</h1><p class="lead">Review saved submissions, safety patterns, feedback, and overall audit trends.</p></div><a class="primary" href="{{url_for('audit')}}">+ New audit</a></div>
+<div class="stats"><article><span>Total audits</span><b>{{stats.total}}</b><small>saved submissions</small></article><article><span>Average score</span><b>{{stats.avg}}<em>/10</em></b><small>risky answers</small></article><article><span>Correct answers</span><b class="green">{{stats.correct}}</b><small>safe choices</small></article><article><span>Wrong answers</span><b class="red">{{stats.wrong}}</b><small>risky choices</small></article><article><span>Risk mix</span><div class="mix"><i class="green">{{stats.low}}</i>/<i>{{stats.medium}}</i>/<i class="red">{{stats.high}}</i></div><small>low / medium / high</small></article><article><span>Latest audit</span><b class="latest">{{stats.latest[:10]}}</b><small>most recent activity</small></article></div>
+<section class="analytics"><p class="eyebrow">AUDIT INSIGHTS</p><h2>Safety overview</h2><div class="analytic-grid"><article><h3>Answer quality</h3><p>Across every question</p><div class="quality"><b>{{stats.correct}}</b><span>safe</span><b>{{stats.wrong}}</b><span>risky</span></div></article><article><h3>Risk profile</h3><p>Derived from all saved audits</p><div class="riskbars"><div><span>Low</span><i style="width:{{(stats.low*100/stats.total) if stats.total else 0}}%"></i><b>{{stats.low}}</b></div><div><span>Medium</span><i style="width:{{(stats.medium*100/stats.total) if stats.total else 0}}%"></i><b>{{stats.medium}}</b></div><div><span>High</span><i style="width:{{(stats.high*100/stats.total) if stats.total else 0}}%"></i><b>{{stats.high}}</b></div></div></article><article><h3>Score bands</h3><p>Audit outcomes</p><div class="donut">{{stats.avg}}<small>avg / 10</small></div></article></div>
+<article class="comparison"><h3>Question comparison</h3><p>Correct and risky answers across all 10 questions.</p><div class="qcompare">{% for q in questions %}<div><b>Q{{loop.index}}</b><span title="{{q}}">{{q}}</span><div class="bar"><i style="width:{{(q_correct[loop.index0]*100/stats.total) if stats.total else 0}}%"></i><em style="width:{{(q_wrong[loop.index0]*100/stats.total) if stats.total else 0}}%"></em></div><small>{{q_correct[loop.index0]}} safe · {{q_wrong[loop.index0]}} risky</small></div>{% endfor %}</div></article>
+<div class="extra-charts">
+  <article class="risk-question-chart">
+    <h3>Question-wise Risk</h3>
+    <p>Risky answers for each audit question.</p>
+    <div class="risk-question-bars">
+      {% for q in questions %}
+      <div class="risk-question-row">
+        <b>Q{{ loop.index }}</b>
+        <span title="{{ q }}">{{ q }}</span>
+        <div class="risk-track"><i style="width:{{ (q_wrong[loop.index0]*100/stats.total) if stats.total else 0 }}%"></i></div>
+        <strong>{{ q_wrong[loop.index0] }}</strong>
+      </div>
+      {% endfor %}
+    </div>
+  </article>
+  <article class="audit-pie-card">
+    <h3>Audit Score Distribution</h3>
+    <p>Low, medium and high risk across saved audits.</p>
+    {% if stats.total %}
+      {% set low_pct = stats.low * 100 / stats.total %}
+      {% set medium_pct = stats.medium * 100 / stats.total %}
+      <div class="audit-pie" style="background:conic-gradient(#46b991 0 {{low_pct}}%, #f1b84b {{low_pct}}% {{low_pct + medium_pct}}%, #df6b67 {{low_pct + medium_pct}}% 100%)">
+        <div><b>{{ stats.total }}</b><small>audits</small></div>
+      </div>
+    {% else %}
+      <div class="audit-pie empty-pie"><div><b>0</b><small>audits</small></div></div>
+    {% endif %}
+    <div class="pie-legend">
+      <span><i class="dot low-dot"></i>Low <b>{{stats.low}}</b></span>
+      <span><i class="dot medium-dot"></i>Medium <b>{{stats.medium}}</b></span>
+      <span><i class="dot high-dot"></i>High <b>{{stats.high}}</b></span>
+    </div>
+  </article>
+</div>
+</section>
+<section class="saved"><div class="section-title"><div><p class="eyebrow">SUBMISSIONS</p><h2>Saved audits</h2></div><span>{{stats.total}} records</span></div>{% if audits %}<div class="record-list">{% for a in audits %}<article class="record"><div class="record-main"><div><span class="risk {{a.risk_level|lower}}">{{a.risk_level}} risk</span><h3>{{a.student_name or 'Anonymous student'}}</h3><p>📍 {{a.location or 'Location not provided'}}</p><p>🖥️ {{a.device_type or 'Unknown device'}} · {{a.browser or 'Unknown browser'}} · {{a.operating_system or 'Unknown OS'}}</p><p>📅 {{a.created_at.replace('T',' ')}}</p>{% if a.feedback %}<p class="direct-feedback">⭐ Feedback: <b>{% for _ in range(a.feedback['rating']) %}★{% endfor %}{% for _ in range(5-a.feedback['rating']) %}☆{% endfor %}</b> {{a.feedback['rating']}}/5</p>{% else %}<p class="direct-feedback">⭐ Feedback: Not submitted</p>{% endif %}</div><div class="record-score"><b>{{a.score}}</b><small>/ 10</small></div></div><details><summary>View details</summary><div class="detail-grid"><div><h4>Recommendations</h4>{% for r in a.recommendations %}<p>✓ {{r}}</p>{% endfor %}</div><div><h4>Feedback</h4>{% if a.feedback %}<p><b>{{a.feedback['rating']}} / 5 stars</b></p><p>{{a.feedback['website_experience']}}</p><p>{{a.feedback['comment'] or 'No comment'}}</p>{% else %}<p>No feedback submitted.</p>{% endif %}</div></div></details><form method="post" action="{{url_for('delete',audit_id=a.id)}}" onsubmit="return confirm('Delete this saved audit?')"><button class="delete">Delete record</button></form></article>{% endfor %}</div>{% else %}<div class="empty"><div>☷</div><h3>No submissions yet</h3><p>Complete your first digital footprint audit and it will appear here.</p><a class="primary" href="{{url_for('audit')}}">Start an audit</a></div>{% endif %}</section></main>{% endblock %}
